@@ -1,0 +1,3 @@
+module idefav-httpserver
+
+go 1.17
