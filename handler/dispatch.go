@@ -15,6 +15,12 @@ const (
 	FAIL    = 1
 )
 
+var DefaultDispatchHandler = NewDespatchHandler()
+
+type Handler interface {
+	NewHandler() *HandlerMapping
+}
+
 type Response struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
@@ -23,6 +29,12 @@ type Response struct {
 
 type DispatchHandler struct {
 	RequestMapping map[string]*Request
+}
+
+func (d *DispatchHandler) AddHandler(handlers ...HandlerMapping) {
+	for _, h := range handlers {
+		d.RequestMapping[h.Path()] = NewRequest(h)
+	}
 }
 
 func NewDespatchHandler(handlers ...HandlerMapping) *DispatchHandler {
