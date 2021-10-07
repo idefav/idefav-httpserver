@@ -26,3 +26,7 @@ func (d *DemoHandler) Handler(writer http.ResponseWriter, request *http.Request)
 		Message: "Demo",
 	}
 }
+
+func init() {
+	handler.DefaultDispatchHandler.AddHandler(&DemoHandler{})
+}

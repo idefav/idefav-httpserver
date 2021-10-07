@@ -3,6 +3,7 @@ package main
 import (
 	"idefav-httpserver/cfg"
 	"idefav-httpserver/handler"
+	_ "idefav-httpserver/handler/demo"
 	_ "idefav-httpserver/handler/headerz"
 	_ "idefav-httpserver/handler/healthz"
 	"log"
