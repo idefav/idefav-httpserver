@@ -114,6 +114,7 @@ type HandlerMapping interface {
 func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	_, handler, err := d.MatchHandler2(request)
 	status := http.StatusOK
+	defer d.accessLog(request, status)
 	var response = &Response{}
 	if handler == nil {
 		err = NotFoundError
@@ -126,7 +127,7 @@ func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 	} else {
 		status, response = handler.Handler.Handler(writer, request)
 	}
-	d.accessLog(request, status)
+
 	d.responseOfJson(writer, status, response)
 }
 
