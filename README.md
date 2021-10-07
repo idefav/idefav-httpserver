@@ -11,7 +11,7 @@ HandlerMapping 包含的函数说明:
 * `Name()` 返回 Handler 名称
 * `Path()` 返回 Handler 匹配路径
 * `Method()` 返回 Handler 可以处理的 HttpMethod
-* `Handler()` 开发正在的处理逻辑
+* `Handler()` 开发真正的处理逻辑
 4. 在 init.go 编写 包初始化函数
 ```go
 func init(){
