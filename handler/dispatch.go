@@ -21,21 +21,21 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
-type DespatchHandler struct {
+type DispatchHandler struct {
 	RequestMapping map[string]*Request
 }
 
-func NewDespatchHandler(handlers ...HandlerMapping) *DespatchHandler {
+func NewDespatchHandler(handlers ...HandlerMapping) *DispatchHandler {
 	var requestMapping = map[string]*Request{}
 	for _, h := range handlers {
 		requestMapping[h.Path()] = NewRequest(h)
 	}
-	return &DespatchHandler{
+	return &DispatchHandler{
 		RequestMapping: requestMapping,
 	}
 }
 
-func (d *DespatchHandler) MatchHandler1(path, method string) (string, *Request, error) {
+func (d *DispatchHandler) MatchHandler1(path, method string) (string, *Request, error) {
 	if d.RequestMapping == nil {
 		return "", nil, fmt.Errorf("request mapping is nil, %w", NotFoundError)
 	}
@@ -50,13 +50,13 @@ func (d *DespatchHandler) MatchHandler1(path, method string) (string, *Request, 
 	return path, request, nil
 }
 
-func (d *DespatchHandler) MatchHandler2(req *http.Request) (string, *Request, error) {
+func (d *DispatchHandler) MatchHandler2(req *http.Request) (string, *Request, error) {
 	path := req.RequestURI
 	method := req.Method
 	return d.MatchHandler1(path, method)
 }
 
-func (d DespatchHandler) ErrorHandler(err error) (int, *Request) {
+func (d DispatchHandler) ErrorHandler(err error) (int, *Request) {
 	var code = FAIL
 	var message = ""
 	message = fmt.Sprintf("error: %v", err)
@@ -99,7 +99,7 @@ type HandlerMapping interface {
 	Handler(writer http.ResponseWriter, request *http.Request) (int, *Response)
 }
 
-func (d *DespatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	_, handler, err := d.MatchHandler2(request)
 	status := http.StatusOK
 	var response = &Response{}
@@ -118,7 +118,7 @@ func (d *DespatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 	d.responseOfJson(writer, status, response)
 }
 
-func (d *DespatchHandler) accessLog(request *http.Request, status int) {
+func (d *DispatchHandler) accessLog(request *http.Request, status int) {
 	log.Printf("%s %s %s - %d",
 		request.RemoteAddr,
 		request.RequestURI,
@@ -127,7 +127,7 @@ func (d *DespatchHandler) accessLog(request *http.Request, status int) {
 	)
 }
 
-func (d *DespatchHandler) responseOfJson(writer http.ResponseWriter, status int, response *Response) {
+func (d *DispatchHandler) responseOfJson(writer http.ResponseWriter, status int, response *Response) {
 	resp, _ := json.Marshal(response)
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(status)

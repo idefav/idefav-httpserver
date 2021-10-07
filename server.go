@@ -7,6 +7,7 @@ import (
 	"idefav-httpserver/handler/healthz"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 )
 
@@ -28,7 +29,6 @@ func main() {
 		ReadTimeout:       1000 * time.Millisecond,
 		Handler:           mux,
 	}
-
 	err := serv.ListenAndServe()
 	if err != nil {
 		log.Fatal("start server failed!")
