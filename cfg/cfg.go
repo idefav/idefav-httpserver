@@ -20,7 +20,7 @@ func SetUp() *ServerConfig {
 	config := ServerConfig{
 		Address: ":8080",
 	}
-	flag.StringVar(&config.Address, "Address", ":8080", "设置服务监听地址")
+	flag.StringVar(&config.Address, "address", ":8080", "设置服务监听地址")
 	flag.Parse()
 	return &config
 }
