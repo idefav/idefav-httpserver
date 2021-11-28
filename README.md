@@ -60,6 +60,15 @@ _ "idefav-httpserver/handler/demo"
 ```
 
 6. 启动服务
+访问 http://localhost:8081/healthz 
+返回结果: 
+```text
+{
+"code": 0,
+"message": "",
+"data": "Health"
+}
+```
 
 ## 如何自定义预热逻辑
 
@@ -125,3 +134,11 @@ func init() {
 ```
 
 ## 如何扩展 router 组件
+实现 router.Interface 接口
+```go
+type Interface interface {
+	GetName() string
+	Add(handler models.HandlerMapping)
+	Match(request *http.Request) (models.HandlerMapping, error)
+}
+```
