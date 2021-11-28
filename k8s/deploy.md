@@ -84,4 +84,4 @@ Strict-Transport-Security: max-age=15724800; includeSubDomains
 {"code":0,"message":"","data":"Health"}
 ```
 
-## 应用高可用参照项目 readme.md
+## 应用高可用参照项目 [项目](../readme.md)
