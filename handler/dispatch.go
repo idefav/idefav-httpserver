@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"idefav-httpserver/cfg"
+	"idefav-httpserver/common"
+	"idefav-httpserver/components/router"
+	"idefav-httpserver/models"
 	"io"
 	"log"
 	"net/http"
@@ -15,10 +18,8 @@ const (
 	FAIL    = 1
 )
 
-var DefaultDispatchHandler = NewDespatchHandler()
-
 type Handler interface {
-	NewHandler() *HandlerMapping
+	NewHandler() *models.HandlerMapping
 }
 
 type Response struct {
@@ -27,105 +28,110 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
+var DefaultDispatchHandler = NewDispatchHandler(nil)
+
 type DispatchHandler struct {
-	RequestMapping map[string]*Request
+	config *cfg.ServerConfig
 }
 
-func (d *DispatchHandler) AddHandler(handlers ...HandlerMapping) {
+func (d *DispatchHandler) GetRouter() router.Interface {
+	getRouter, err := router.GetRouter(router.DEFAULT_ROUTER)
+	if err != nil {
+		log.Fatalf("no router found")
+	}
+	return getRouter
+}
+
+type Interface interface {
+	AddHandler(handlers ...models.HandlerMapping)
+	GetRouter() router.Interface
+	Match(req *http.Request) (models.HandlerMapping, error)
+}
+
+func (d *DispatchHandler) AddHandler(handlers ...models.HandlerMapping) {
+	getRouter := d.GetRouter()
 	for _, h := range handlers {
-		d.RequestMapping[h.Path()] = NewRequest(h)
+		getRouter.Add(h)
 	}
 }
 
-func NewDespatchHandler(handlers ...HandlerMapping) *DispatchHandler {
-	var requestMapping = map[string]*Request{}
+func NewDispatchHandler(config *cfg.ServerConfig, handlers ...models.HandlerMapping) *DispatchHandler {
+	dispatchHandler := DispatchHandler{
+		config: config,
+	}
+	getRouter := dispatchHandler.GetRouter()
 	for _, h := range handlers {
-		requestMapping[h.Path()] = NewRequest(h)
+		getRouter.Add(h)
 	}
-	return &DispatchHandler{
-		RequestMapping: requestMapping,
-	}
+	return &dispatchHandler
 }
 
-func (d *DispatchHandler) MatchHandler1(path, method string) (string, *Request, error) {
-	if d.RequestMapping == nil {
-		return "", nil, fmt.Errorf("request mapping is nil, %w", NotFoundError)
-	}
-	request, ok := d.RequestMapping[path]
-	if !ok {
-		return "", nil, fmt.Errorf("path not match, %w", NotFoundError)
-	}
-	// 判断method
-	if method != request.Method {
-		return "", nil, fmt.Errorf("method not match, %w", NotFoundError)
-	}
-	return path, request, nil
+func (d *DispatchHandler) Match(req *http.Request) (models.HandlerMapping, error) {
+	getRouter := d.GetRouter()
+	return getRouter.Match(req)
 }
 
-func (d *DispatchHandler) MatchHandler2(req *http.Request) (string, *Request, error) {
-	path := req.RequestURI
-	method := req.Method
-	return d.MatchHandler1(path, method)
-}
-
-func (d DispatchHandler) ErrorHandler(err error) (int, *Request) {
+func (d DispatchHandler) ErrorHandler(err error) (int, *Response) {
 	var code = FAIL
-	var message = ""
+	var message = "unknown error"
 	message = fmt.Sprintf("error: %v", err)
-	if errors.Is(err, NotFoundError) {
+	if errors.Is(err, common.NotFoundError) {
 		code = http.StatusNotFound
-	}
-	if errors.Is(err, RuntimeError) {
+	} else if errors.Is(err, common.RuntimeError) {
 		code = http.StatusInternalServerError
 	}
 
-	_, request, err := d.MatchHandler1(cfg.ERROR_HANDLER, http.MethodGet)
-	if err != nil {
-		return code, &Request{
-			Path:    "/error",
-			Method:  http.MethodGet,
-			Handler: &ErrorHandler{Code: code, Message: message},
-		}
+	return code, &Response{
+		Code:    code,
+		Message: message,
 	}
-	return code, request
-}
-
-type Request struct {
-	Path    string
-	Method  string
-	Handler HandlerMapping
-}
-
-func NewRequest(h HandlerMapping) *Request {
-	return &Request{
-		Path:    h.Name(),
-		Method:  h.Method(),
-		Handler: h,
-	}
-}
-
-type HandlerMapping interface {
-	Name() string
-	Path() string
-	Method() string
-	Handler(writer http.ResponseWriter, request *http.Request) (int, *Response)
 }
 
 func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	_, handler, err := d.MatchHandler2(request)
+	defer func() {
+		r := recover()
+		if r != nil {
+			var err error
+			switch t := r.(type) {
+			case string:
+				err = errors.New(t)
+			case error:
+				err = t
+			default:
+				err = errors.New("unknown error")
+			}
+			d.responseOfJson(writer, http.StatusInternalServerError, &Response{
+				Code:    FAIL,
+				Message: err.Error(),
+			})
+		}
+	}()
+	h, err := d.Match(request)
 	status := http.StatusOK
-	defer d.accessLog(request, status)
+	if d.config.AccessLog {
+		defer d.accessLog(request, status)
+	}
+
 	var response = &Response{}
-	if handler == nil {
-		err = NotFoundError
+	if h == nil {
+		err = common.NotFoundError
 	}
 
 	if err != nil {
-		code, req := d.ErrorHandler(err)
+		code, resp := d.ErrorHandler(err)
 		status = code
-		_, response = req.Handler.Handler(writer, request)
+		response = resp
+
 	} else {
-		status, response = handler.Handler.Handler(writer, request)
+		data, err2 := h.Handler(writer, request)
+		if err2 != nil {
+			code, resp := d.ErrorHandler(err)
+			status = code
+			response = resp
+		} else {
+			response.Data = data
+			response.Code = SUCCESS
+		}
 	}
 
 	d.responseOfJson(writer, status, response)
@@ -145,4 +151,9 @@ func (d *DispatchHandler) responseOfJson(writer http.ResponseWriter, status int,
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(status)
 	_, _ = io.WriteString(writer, string(resp))
+}
+
+func SetUpDispatchHandler(config *cfg.ServerConfig) *DispatchHandler {
+	DefaultDispatchHandler.config = config
+	return DefaultDispatchHandler
 }

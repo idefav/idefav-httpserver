@@ -1,0 +1,11 @@
+server:
+  address: ":8081"
+  warmup: true
+  access-log:
+    enabled: true
+  shutdown:
+    graceful:
+      enabled: true
+      wait-time-ms: 30000
+router:
+  name: "Default"

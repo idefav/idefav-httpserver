@@ -3,6 +3,6 @@ package healthz
 type ServerHealth struct {
 }
 
-func (s *ServerHealth) health() bool {
+func (s *ServerHealth) Health() bool {
 	return true
 }

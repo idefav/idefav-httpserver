@@ -1,3 +1,3 @@
 hub=${HUB-idefav}
-image=${IMAGE-httpserver:0.0.1}
+image=${IMAGE-httpserver:latest}
 docker build . -t "${hub}/${image}"

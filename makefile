@@ -1,6 +1,6 @@
 All:
 HUB ?=idefav
-IMAGE ?=httpserver:0.0.1
+IMAGE ?=httpserver:latest
 build: All
 	./build.sh
 push: build
