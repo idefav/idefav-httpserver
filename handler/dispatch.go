@@ -34,8 +34,8 @@ type DispatchHandler struct {
 	config *cfg.ServerConfig
 }
 
-func (d *DispatchHandler) GetRouter() router.Interface {
-	getRouter, err := router.GetRouter(router.DEFAULT_ROUTER)
+func GetRouter() router.Interface {
+	getRouter, err := router.GetRouter(DefaultDispatchHandler.config.RouterName)
 	if err != nil {
 		log.Fatalf("no router found")
 	}
@@ -49,7 +49,7 @@ type Interface interface {
 }
 
 func (d *DispatchHandler) AddHandler(handlers ...models.HandlerMapping) {
-	getRouter := d.GetRouter()
+	getRouter := GetRouter()
 	for _, h := range handlers {
 		getRouter.Add(h)
 	}
@@ -59,7 +59,7 @@ func NewDispatchHandler(config *cfg.ServerConfig, handlers ...models.HandlerMapp
 	dispatchHandler := DispatchHandler{
 		config: config,
 	}
-	getRouter := dispatchHandler.GetRouter()
+	getRouter := GetRouter()
 	for _, h := range handlers {
 		getRouter.Add(h)
 	}
@@ -67,7 +67,7 @@ func NewDispatchHandler(config *cfg.ServerConfig, handlers ...models.HandlerMapp
 }
 
 func (d *DispatchHandler) Match(req *http.Request) (models.HandlerMapping, error) {
-	getRouter := d.GetRouter()
+	getRouter := GetRouter()
 	return getRouter.Match(req)
 }
 
