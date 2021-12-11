@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"idefav-httpserver/cfg"
 	"idefav-httpserver/common"
+	"idefav-httpserver/components/interceptor"
 	"idefav-httpserver/components/router"
 	"idefav-httpserver/models"
 	"io"
@@ -123,15 +124,23 @@ func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 		response = resp
 
 	} else {
-		data, err2 := h.Handler(writer, request)
-		if err2 != nil {
+		err := interceptor.Run(writer, request)
+		if err != nil {
 			code, resp := d.ErrorHandler(err)
 			status = code
 			response = resp
 		} else {
-			response.Data = data
-			response.Code = SUCCESS
+			data, err2 := h.Handler(writer, request)
+			if err2 != nil {
+				code, resp := d.ErrorHandler(err)
+				status = code
+				response = resp
+			} else {
+				response.Data = data
+				response.Code = SUCCESS
+			}
 		}
+
 	}
 
 	d.responseOfJson(writer, status, response)
