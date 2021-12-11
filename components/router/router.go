@@ -2,6 +2,7 @@ package router
 
 import (
 	"errors"
+	"idefav-httpserver/context"
 	"idefav-httpserver/models"
 	"net/http"
 )
@@ -13,7 +14,8 @@ const (
 type Interface interface {
 	GetName() string
 	Add(handler models.HandlerMapping)
-	Match(request *http.Request) (models.HandlerMapping, error)
+	NewContext(request *http.Request, writer http.ResponseWriter) context.Interface
+	Match() (models.HandlerMapping, error)
 }
 
 type RouterMap map[string]Interface

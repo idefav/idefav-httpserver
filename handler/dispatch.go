@@ -66,9 +66,10 @@ func NewDispatchHandler(config *cfg.ServerConfig, handlers ...models.HandlerMapp
 	return &dispatchHandler
 }
 
-func (d *DispatchHandler) Match(req *http.Request) (models.HandlerMapping, error) {
+func (d *DispatchHandler) Match(req *http.Request, writer http.ResponseWriter) (models.HandlerMapping, error) {
 	getRouter := GetRouter()
-	return getRouter.Match(req)
+	getRouter.NewContext(req, writer)
+	return getRouter.Match()
 }
 
 func (d DispatchHandler) ErrorHandler(err error) (int, *Response) {
@@ -106,7 +107,7 @@ func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 			})
 		}
 	}()
-	h, err := d.Match(request)
+	h, err := d.Match(request, writer)
 	status := http.StatusOK
 	if d.config.AccessLog {
 		defer d.accessLog(request, status)
