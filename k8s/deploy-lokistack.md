@@ -1,6 +1,9 @@
 
 # 安装Loki stack
 
+## 项目功能
+参照项目介绍 (readme.md)
+新增拦截器模块, 支持对请求进行自定义过滤类需求, 比如加入随机延迟
 ## 使用Helm安装
 ```shell
 helm repo add grafana https://grafana.github.io/helm-charts
