@@ -173,3 +173,8 @@ idefav_httpserver_request_duration_seconds_sum{Method="GET",Path="/healthz",Stat
 查看面板数据:
 
 ![image-20211211170612856](images/image-20211211170612856.png)
+
+## 通过Loki查看httpserver日志
+
+![image-20211211171452621](images/image-20211211171452621.png)
+
