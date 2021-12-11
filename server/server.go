@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	_ "idefav-httpserver/auto"
 	"idefav-httpserver/cfg"
 	"idefav-httpserver/components/shutdown"
@@ -19,6 +20,7 @@ func Start() {
 	var serverConfig = cfg.SetUp()
 	mux := http.DefaultServeMux
 	mux.Handle("/", handler.SetUpDispatchHandler(serverConfig))
+	http.Handle("/metrics", promhttp.Handler())
 	serv := &http.Server{
 		Addr:              serverConfig.Address,
 		ReadHeaderTimeout: 1000 * time.Millisecond,

@@ -4,14 +4,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"idefav-httpserver/cfg"
 	"idefav-httpserver/common"
 	"idefav-httpserver/components/interceptor"
 	"idefav-httpserver/components/router"
 	"idefav-httpserver/models"
+	"idefav-httpserver/prometheus"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 const (
@@ -89,7 +93,10 @@ func (d DispatchHandler) ErrorHandler(err error) (int, *Response) {
 }
 
 func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+	status := http.StatusOK
 	defer func() {
+
 		r := recover()
 		if r != nil {
 			var err error
@@ -106,9 +113,16 @@ func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 				Message: err.Error(),
 			})
 		}
+		cost := time.Since(start)
+		prometheus.RequestRt.With(prometheus2.Labels{
+			"Method": request.Method,
+			"Path":   request.RequestURI,
+			"Status": strconv.FormatInt(int64(status), 10),
+		}).Observe(cost.Seconds())
 	}()
+
 	h, err := d.Match(request)
-	status := http.StatusOK
+
 	if d.config.AccessLog {
 		defer d.accessLog(request, status)
 	}
