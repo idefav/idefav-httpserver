@@ -7,8 +7,10 @@ var RequestRt *prometheus.HistogramVec
 func init() {
 	RequestRt = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: "request_duration_seconds",
-			Help: "the cost of request",
+			Namespace: "idefav",
+			Subsystem: "httpserver",
+			Name:      "request_duration_seconds",
+			Help:      "the cost of request",
 		},
 		[]string{"Method", "Path", "Status"},
 	)
