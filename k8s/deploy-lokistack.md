@@ -119,7 +119,54 @@ kind: Secret
 ## 发布应用
 ```shell
 # 编译0.0.4版本并push镜像到dockerhub
-make IMAGE=httpserver:0.0.4 push
+make IMAGE=httpserver:0.0.6 push
 
 helm upgrade idefav-httpserver ./idefav-httpserver/ -f ./idefav-httpserver/valuesWithMetrics.yaml
 ```
+访问headerz接口
+```text
+curl http://demo.idefav.local/headerz
+```
+查看 metrics接口是否有相应的指标
+```text
+curl http://demo.idefav.local/metrics
+```
+```text
+# HELP idefav_httpserver_request_duration_seconds the cost of request
+# TYPE idefav_httpserver_request_duration_seconds histogram
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="0.005"} 0
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="0.01"} 0
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="0.025"} 0
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="0.05"} 1
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="0.1"} 2
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="0.25"} 4
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="0.5"} 6
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="1"} 10
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="2.5"} 10
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="5"} 10
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="10"} 10
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/headerz",Status="200",le="+Inf"} 10
+idefav_httpserver_request_duration_seconds_sum{Method="GET",Path="/headerz",Status="200"} 4.234906838000001
+idefav_httpserver_request_duration_seconds_count{Method="GET",Path="/headerz",Status="200"} 10
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="0.005"} 4
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="0.01"} 6
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="0.025"} 13
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="0.05"} 25
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="0.1"} 48
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="0.25"} 104
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="0.5"} 214
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="1"} 402
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="2.5"} 402
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="5"} 402
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="10"} 402
+idefav_httpserver_request_duration_seconds_bucket{Method="GET",Path="/healthz",Status="200",le="+Inf"} 402
+idefav_httpserver_request_duration_seconds_sum{Method="GET",Path="/healthz",Status="200"} 188.383858768
+```
+
+
+## 配置Grafana面板
+导入 grafana-dashboard.json 
+
+查看面板数据:
+
+![image-20211211170612856](images/image-20211211170612856.png)
