@@ -166,7 +166,7 @@ type Interface interface {
 }
 ```
 
-## opentracing 支持
+## opentracing 支持, 支持 Istio trace id透传
 ```go
 type Context struct {
 	Writer  http.ResponseWriter
