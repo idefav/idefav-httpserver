@@ -1,14 +1,14 @@
 package handler
 
 import (
-	"net/http"
+	"idefav-httpserver/models"
 )
 
 type SimpleHandler struct {
 	Name   string
 	Path   string
 	Method string
-	Proc   func(writer http.ResponseWriter, request *http.Request) (interface{}, error)
+	Proc   func(ctx *models.Context) (interface{}, error)
 }
 
 func (h *SimpleHandler) GetName() string {
@@ -23,6 +23,6 @@ func (h *SimpleHandler) GetMethod() string {
 	return h.Method
 }
 
-func (h *SimpleHandler) Handler(writer http.ResponseWriter, request *http.Request) (interface{}, error) {
-	return h.Proc(writer, request)
+func (h *SimpleHandler) Handler(ctx *models.Context) (interface{}, error) {
+	return h.Proc(ctx)
 }

@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	APPNAME                        = "app.id"
 	ADDRESS                        = "address"
 	SHUTDOWN_GRACEFUL              = "shutdown.graceful"
 	SHUTDOWN_GRACEFUL_WAIT_TIME_MS = "shutdown.graceful.wait-time-ms"
@@ -31,6 +32,7 @@ func (c Command) GetOrder() int {
 }
 
 func (c Command) Load(config *cfg.ServerConfig) {
+	appName := flag.String(APPNAME, "", "设置服务名称")
 	address := flag.String(ADDRESS, "", "设置服务监听地址")
 	shutdownGraceful := flag.String(SHUTDOWN_GRACEFUL, "", "是否优雅停机")
 	shutdownGracefulWaitTimeMs := flag.String(SHUTDOWN_GRACEFUL_WAIT_TIME_MS, "", "设置优雅停机等待时间")
@@ -38,6 +40,9 @@ func (c Command) Load(config *cfg.ServerConfig) {
 	routerName := flag.String(ROUTER_NAME, "", "路由组件")
 	accessLog := flag.String(ACCESS_LOG, "", "开启访问日志")
 	flag.Parse()
+	if *appName != "" {
+		config.AppName = *appName
+	}
 	if *address != "" {
 		config.Address = *address
 	}

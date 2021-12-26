@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	APPNAME                        = "APP-ID"
 	ADDRESS                        = "ADDR"
 	SHUTDOWN_GRACEFUL              = "GRACEFUL"
 	SHUTDOWN_GRACEFUL_WAIT_TIME_MS = "GRACEFUL-WAIT-TIME-MS"
@@ -31,6 +32,10 @@ func (e Environment) GetOrder() int {
 }
 
 func (e Environment) Load(config *cfg.ServerConfig) {
+
+	if val := GetStringEnvVal(APPNAME); val != "" {
+		config.AppName = val
+	}
 
 	if val := GetStringEnvVal(ADDRESS); val != "" {
 		config.Address = val

@@ -1,3 +1,5 @@
+app:
+  id: idefav-httpserver
 server:
   address: ":8081"
   warmup: true

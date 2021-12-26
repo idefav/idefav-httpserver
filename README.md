@@ -14,6 +14,8 @@
    可以实现真正的流量无损发布
 5. 加入 Router 模块, 默认路由不支持复杂 Url 匹配, 但是路由模块支持扩展
 6. 新增拦截器模块, 支持对请求进行自定义过滤类需求, 比如加入随机延迟
+7. 新增metrics支持, 支持暴露metrics指标给prometheus
+8. 新增opentracing支持, 支持istio envoy trace id透传
 
 ## 如何编写 Handler
 
@@ -162,4 +164,35 @@ type Interface interface {
 	Add(handler models.HandlerMapping)
 	Match(request *http.Request) (models.HandlerMapping, error)
 }
+```
+
+## opentracing 支持
+```go
+type Context struct {
+	Writer  http.ResponseWriter
+	Request *http.Request
+	Span    opentracing.Span
+}
+```
+使用参照httpbin接口调用demo
+```go
+asyncReq, err := http.NewRequest(http.MethodGet, "http://httpbin/headers", nil)
+err = tracing.Inject(ctx.Span, asyncReq)
+if err != nil {
+    ctx.Span.SetTag("error", true)
+    ctx.Span.LogEvent(fmt.Sprintf("Could not inject span context into header: %v", err))
+}
+resp, err := http.DefaultClient.Do(asyncReq)
+if err != nil {
+    ctx.Span.SetTag("error", true)
+    ctx.Span.LogEvent(fmt.Sprintf("%s /headers error: %v", http.MethodGet, err))
+    return nil, err
+}
+if resp.StatusCode != http.StatusOK {
+    return nil, fmt.Errorf("access httpbin failed, %v", resp.StatusCode)
+}
+body, err := ioutil.ReadAll(resp.Body)
+var data = make(map[string]interface{})
+err = json.Unmarshal(body, &data)
+return data, err
 ```

@@ -15,6 +15,8 @@ const (
 )
 
 type ServerConfig struct {
+	// app name
+	AppName string
 	// listen Address
 	Address string
 	// 优雅停机
@@ -55,6 +57,7 @@ var ServerConfigLoaderList = ServerConfigLoaders{}
 
 func SetUp() *ServerConfig {
 	config := ServerConfig{
+		AppName:                    "idefav-httpserver",
 		Address:                    ":8080",
 		GracefulShutdown:           true,
 		GracefulShutdownWaitTimeMs: 30 * 1000,

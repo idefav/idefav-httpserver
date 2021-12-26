@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"idefav-httpserver/cfg"
 	"idefav-httpserver/common"
@@ -11,6 +12,7 @@ import (
 	"idefav-httpserver/components/router"
 	"idefav-httpserver/models"
 	"idefav-httpserver/prometheus"
+	"idefav-httpserver/tracing"
 	"io"
 	"log"
 	"net/http"
@@ -19,8 +21,8 @@ import (
 )
 
 const (
-	SUCCESS = 0
-	FAIL    = 1
+	SUCCESS = 200
+	FAIL    = 500
 )
 
 type Handler interface {
@@ -37,6 +39,7 @@ var DefaultDispatchHandler = NewDispatchHandler(nil)
 
 type DispatchHandler struct {
 	config *cfg.ServerConfig
+	tracer *opentracing.Tracer
 }
 
 func (d *DispatchHandler) GetRouter() router.Interface {
@@ -120,7 +123,9 @@ func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 			"Status": strconv.FormatInt(int64(status), 10),
 		}).Observe(cost.Seconds())
 	}()
-
+	span := tracing.StartSpanFromRequest(*d.tracer, request)
+	defer span.Finish()
+	context := models.NewContext(request, writer, span)
 	h, err := d.Match(request)
 
 	if d.config.AccessLog {
@@ -144,9 +149,9 @@ func (d *DispatchHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 			status = code
 			response = resp
 		} else {
-			data, err2 := h.Handler(writer, request)
+			data, err2 := h.Handler(&context)
 			if err2 != nil {
-				code, resp := d.ErrorHandler(err)
+				code, resp := d.ErrorHandler(err2)
 				status = code
 				response = resp
 			} else {
@@ -176,7 +181,8 @@ func (d *DispatchHandler) responseOfJson(writer http.ResponseWriter, status int,
 	_, _ = io.WriteString(writer, string(resp))
 }
 
-func SetUpDispatchHandler(config *cfg.ServerConfig) *DispatchHandler {
+func SetUpDispatchHandler(config *cfg.ServerConfig, tracer *opentracing.Tracer) *DispatchHandler {
 	DefaultDispatchHandler.config = config
+	DefaultDispatchHandler.tracer = tracer
 	return DefaultDispatchHandler
 }

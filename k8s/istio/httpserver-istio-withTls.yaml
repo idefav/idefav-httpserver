@@ -1,0 +1,35 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: idefav-httpserver
+spec:
+  gateways:
+    - idefav-httpserver
+  hosts:
+    - demo.idefav.io
+  http:
+    - match:
+        - port: 443
+      route:
+        - destination:
+            host: idefav-httpserver.istio-demo.svc.cluster.local
+            port:
+              number: 8081
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: idefav-httpserver
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - demo.idefav.io
+      port:
+        name: http
+        number: 443
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: idefav-io-secret

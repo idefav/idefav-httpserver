@@ -4,6 +4,8 @@ metadata:
   name: {{ include "idefav-httpserver.fullname" . }}
 data:
   server.yaml: |
+    app:
+      id: idefav-httpserver
     server:
       address: ":8081"
       warmup: true

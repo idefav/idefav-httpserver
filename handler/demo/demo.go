@@ -3,6 +3,7 @@ package demo
 import (
 	"idefav-httpserver/cfg"
 	"idefav-httpserver/handler"
+	"idefav-httpserver/models"
 	"net/http"
 	"os"
 )
@@ -12,15 +13,15 @@ func init() {
 		Name:   "Headerz",
 		Path:   "/headerz",
 		Method: http.MethodGet,
-		Proc: func(writer http.ResponseWriter, request *http.Request) (interface{}, error) {
-			for headerName, headerValues := range request.Header {
+		Proc: func(ctx *models.Context) (interface{}, error) {
+			for headerName, headerValues := range ctx.Request.Header {
 				for _, v := range headerValues {
-					writer.Header().Add(headerName, v)
+					ctx.Writer.Header().Add(headerName, v)
 				}
 			}
 			version := os.Getenv(cfg.VERSION)
 			if version != "" {
-				writer.Header().Add(cfg.VERSION, version)
+				ctx.Writer.Header().Add(cfg.VERSION, version)
 			}
 			return "Ok", nil
 		},
@@ -30,7 +31,7 @@ func init() {
 		Name:   "Demo",
 		Path:   "/demo",
 		Method: http.MethodGet,
-		Proc: func(writer http.ResponseWriter, request *http.Request) (interface{}, error) {
+		Proc: func(ctx *models.Context) (interface{}, error) {
 			return "Demo", nil
 		},
 	})
@@ -39,7 +40,7 @@ func init() {
 		Name:   "Panic",
 		Path:   "/panic",
 		Method: http.MethodGet,
-		Proc: func(writer http.ResponseWriter, request *http.Request) (interface{}, error) {
+		Proc: func(ctx *models.Context) (interface{}, error) {
 			panic("demo panic")
 		},
 	})

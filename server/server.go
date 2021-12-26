@@ -2,12 +2,14 @@ package server
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	_ "idefav-httpserver/auto"
 	"idefav-httpserver/cfg"
 	"idefav-httpserver/components/shutdown"
 	"idefav-httpserver/components/warmup"
 	"idefav-httpserver/handler"
+	"idefav-httpserver/tracing"
 	"log"
 	"net/http"
 	"os"
@@ -18,8 +20,13 @@ import (
 
 func Start() {
 	var serverConfig = cfg.SetUp()
+
+	tracer, closer := tracing.Init(serverConfig.AppName)
+	defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
+
 	mux := http.DefaultServeMux
-	mux.Handle("/", handler.SetUpDispatchHandler(serverConfig))
+	mux.Handle("/", handler.SetUpDispatchHandler(serverConfig, &tracer))
 	http.Handle("/metrics", promhttp.Handler())
 	serv := &http.Server{
 		Addr:              serverConfig.Address,

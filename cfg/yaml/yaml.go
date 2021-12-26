@@ -28,6 +28,9 @@ import yml "gopkg.in/yaml.v2"
 //}
 
 type YamlConfig struct {
+	App struct {
+		Id string `yaml:"id"`
+	} `yaml:"app"`
 	Server struct {
 		Address   string `yaml:"address"`
 		Warmup    bool   `yaml:"warmup"`
@@ -78,6 +81,7 @@ func (y YamlConfig) Load(config *cfg.ServerConfig) {
 	}
 	marshal, _ := json.MarshalIndent(yamlConfig, "", "  ")
 	log.Printf("yaml: %s\n", string(marshal))
+	config.AppName = yamlConfig.App.Id
 	config.Address = yamlConfig.Server.Address
 	config.GracefulShutdown = yamlConfig.Server.Shutdown.Graceful.Enabled
 	config.RouterName = yamlConfig.Router.Name

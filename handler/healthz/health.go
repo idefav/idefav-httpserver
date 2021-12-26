@@ -3,6 +3,7 @@ package healthz
 import (
 	"errors"
 	"idefav-httpserver/cfg"
+	"idefav-httpserver/models"
 	"net/http"
 )
 
@@ -24,7 +25,7 @@ func (h *Health) GetName() string {
 	return h.name
 }
 
-func (h *Health) Handler(writer http.ResponseWriter, request *http.Request) (interface{}, error) {
+func (h *Health) Handler(ctx *models.Context) (interface{}, error) {
 	var res = cfg.HEALTH
 	if !h.checkHealth() {
 		res = cfg.UNHEALTHY
